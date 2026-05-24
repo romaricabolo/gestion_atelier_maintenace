@@ -363,17 +363,19 @@
                     </div>
                     <div class="receipt" id="receiptContent">
                         <div class="header">
-                            <h1>🔧 ATELIER MAINTENANCE</h1>
-                            <p>Votre expert en réparation électronique</p>
+                            <h1>🔧 ROMAIN ROLAND ELECTRONIQUE</h1>
+                            <p>Votre expert en maintenance informatique</p>                          
                             <div class="company-info">
                                 <span>📞 +237 679 174 413</span>
-                                <span>✉ romaricabolo@gmail.com</span>
+                                <span>✉ romainroland@gmail.com</span>
                                 <span>📍 Sangmelima, Cameroun</span>
                             </div>
                         </div>
+                        
                         <div class="body">
                             <div class="info-client">
-                                <h3>📋 INFORMATIONS CLIENT</h3>
+                                <div id="currentDate" style="color: rgb(52, 45, 45); font-size: 0.8rem; font-style: italic; font-weight:bold; margin-top: 12px; position:absolute; padding-left:43%;"></div>
+                                <h3>📋 INFORMATIONS CLIENT</h3>                                
                                 <p><strong>Nom :</strong> <?php echo htmlspecialchars($client['nom']); ?></p>
                                 <p><strong>Téléphone :</strong> <?php echo htmlspecialchars($client['telephone']); ?></p>
                                 <p><strong>Email :</strong> <?php echo htmlspecialchars($client['email'] ? $client['email'] : 'Non renseigné'); ?></p>
@@ -435,6 +437,22 @@
                         };
                         html2pdf().set(opt).from(element).save();
                     }
+                    document.addEventListener('DOMContentLoaded', function() {
+                        var options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                        document.getElementById('currentDate').innerHTML = new Date().toLocaleDateString('fr-FR', options);
+                        loadPage('dashboard');
+                        
+                        var navItems = document.querySelectorAll('.nav-item');
+                        for (var i = 0; i < navItems.length; i++) {
+                            navItems[i].addEventListener('click', function() {
+                                var navs = document.querySelectorAll('.nav-item');
+                                for (var j = 0; j < navs.length; j++) navs[j].classList.remove('active');
+                                this.classList.add('active');
+                                loadPage(this.getAttribute('data-page'));
+                                if (window.innerWidth <= 768) closeMobileMenu();
+                            });
+                        }
+                    });
                 </script>
             </body>
             </html>

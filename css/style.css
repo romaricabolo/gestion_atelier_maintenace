@@ -93,13 +93,13 @@ input, select, textarea { width: 100%; padding: 8px 12px; border: 1px solid #ddd
 body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }
 .container { max-width: 800px; margin: 0 auto; }
 .receipt { background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
-.header { background: #1a2a3a; color: white; padding: 25px; text-align: center; }
+.header { background: #365c83; color: white; padding: 25px; text-align: center; }
 .header h1 { font-size: 24px; margin-bottom: 5px; }
 .header p { font-size: 12px; opacity: 0.8; }
 .company-info { display: flex; justify-content: space-between; margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.2); font-size: 11px; }
 .body { padding: 25px; }
 .info-client { background: #f0f2f5; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
-.info-client h3 { color: #1a2a3a; margin-bottom: 10px; font-size: 16px; }
+.info-client h3 { color: #3e6994; margin-bottom: 10px; font-size: 16px; }
 .info-client p { margin: 5px 0; font-size: 14px; }
 .stats { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
 .stat { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; padding: 15px; border-radius: 8px; flex: 1; text-align: center; }
