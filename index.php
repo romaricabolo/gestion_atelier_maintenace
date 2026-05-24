@@ -370,11 +370,11 @@
                                 <span>✉ romainroland@gmail.com</span>
                                 <span>📍 Sangmelima, Cameroun</span>
                             </div>
-                        </div>
-                        
+                        </div> 
+                        <div class="dateImpression" id="currentDate" ></div>   
                         <div class="body">
                             <div class="info-client">
-                                <div id="currentDate" style="color: rgb(52, 45, 45); font-size: 0.8rem; font-style: italic; font-weight:bold; margin-top: 12px; position:absolute; padding-left:43%;"></div>
+                                
                                 <h3>📋 INFORMATIONS CLIENT</h3>                                
                                 <p><strong>Nom :</strong> <?php echo htmlspecialchars($client['nom']); ?></p>
                                 <p><strong>Téléphone :</strong> <?php echo htmlspecialchars($client['telephone']); ?></p>
@@ -438,20 +438,8 @@
                         html2pdf().set(opt).from(element).save();
                     }
                     document.addEventListener('DOMContentLoaded', function() {
-                        var options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-                        document.getElementById('currentDate').innerHTML = new Date().toLocaleDateString('fr-FR', options);
-                        loadPage('dashboard');
-                        
-                        var navItems = document.querySelectorAll('.nav-item');
-                        for (var i = 0; i < navItems.length; i++) {
-                            navItems[i].addEventListener('click', function() {
-                                var navs = document.querySelectorAll('.nav-item');
-                                for (var j = 0; j < navs.length; j++) navs[j].classList.remove('active');
-                                this.classList.add('active');
-                                loadPage(this.getAttribute('data-page'));
-                                if (window.innerWidth <= 768) closeMobileMenu();
-                            });
-                        }
+                        var options = { year: 'numeric', month: 'numeric', day: 'numeric',hour:'2-digit', minute:'2-digit',second:'2-digit' };
+                        document.getElementById('currentDate').innerHTML = new Date().toLocaleString('fr-FR', options);   
                     });
                 </script>
             </body>
@@ -471,7 +459,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Atelier Maintenance Électronique</title>
+        <title>Atelier Maintenance Informatique</title>
         <link rel="stylesheet" href="./css/style.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -485,7 +473,7 @@
             <aside class="sidebar" id="sidebar">
                 <div class="sidebar-header">
                     <h1>🔧 ATELIER</h1>
-                    <p>Maintenance Électronique</p>
+                    <p>Maintenance Informatique</p>
                 </div>
                 <nav class="sidebar-nav">
                     <div class="nav-item active" data-page="dashboard"><i class="fas fa-chart-line"></i> Tableau de bord</div>
@@ -497,7 +485,7 @@
             
             <main class="main-content">
                 <header class="main-header">
-                    <h1 class="page-title" id="pageTitle">Tableau de bord</h1>
+                    <h1 class="page-title" id="pageTitle">Tableau De Bord</h1>
                     <div class="date-display" id="currentDate"></div>
                 </header>
                 <div id="pageContent"><div class="loading"><div class="spinner"></div></div></div>
