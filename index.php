@@ -165,18 +165,65 @@
                         echo json_encode($stmt->fetchAll());
                     }
                 }
-                elseif ($_SERVER['REQUEST_METHOD'] == 'POST') {
-                    $data = json_decode(file_get_contents('php://input'), true);
+                // Dans le cas POST (ajout de client)
+            elseif ($_SERVER['REQUEST_METHOD'] == 'POST') {
+                $data = json_decode(file_get_contents('php://input'), true);
+                
+                try {
+                    // Vérifier si le client existe déjà
+                    $stmt = $conn->prepare("SELECT id FROM clients WHERE telephone = ?");
+                    $stmt->execute(array($data['telephone']));
+                    $existing = $stmt->fetch();
+                    
+                    if ($existing) {
+                        http_response_code(409);
+                        echo json_encode(array('success' => false, 'error' => 'Ce numéro de téléphone existe déjà', 'client_id' => $existing['id']));
+                        exit;
+                    }
+                    
+                    // Insérer le nouveau client
                     $stmt = $conn->prepare("INSERT INTO clients (nom, telephone, email, adresse) VALUES (?, ?, ?, ?)");
                     $adresse = isset($data['adresse']) ? $data['adresse'] : '';
                     $stmt->execute(array($data['nom'], $data['telephone'], $data['email'], $adresse));
                     echo json_encode(array('success' => true, 'id' => $conn->lastInsertId()));
+                    
+                } catch(PDOException $e) {
+                    if ($e->getCode() == 23000) { // Code erreur duplicate entry
+                        http_response_code(409);
+                        echo json_encode(array('success' => false, 'error' => 'Ce numéro de téléphone existe déjà'));
+                    } else {
+                        http_response_code(500);
+                        echo json_encode(array('success' => false, 'error' => 'Erreur: ' . $e->getMessage()));
+                    }
                 }
-                elseif ($_SERVER['REQUEST_METHOD'] == 'PUT') {
+                exit;
+            }
+              elseif ($_SERVER['REQUEST_METHOD'] == 'PUT') {
                     $data = json_decode(file_get_contents('php://input'), true);
-                    $stmt = $conn->prepare("UPDATE clients SET nom=?, telephone=?, email=?, adresse=? WHERE id=?");
-                    $stmt->execute(array($data['nom'], $data['telephone'], $data['email'], $data['adresse'], $data['id']));
-                    echo json_encode(array('success' => true));
+                     try {
+                        // Vérifier si le téléphone n'appartient pas à un autre client
+                        $stmt = $conn->prepare("SELECT id FROM clients WHERE telephone = ? AND id != ?");
+                        $stmt->execute(array($data['telephone'], $data['id']));
+                        $existing = $stmt->fetch();
+                        
+                        if ($existing) {
+                            http_response_code(409);
+                            echo json_encode(array('success' => false, 'error' => 'Ce numéro de téléphone existe déjà pour un autre client'));
+                            exit;
+                        }
+                        $stmt = $conn->prepare("UPDATE clients SET nom=?, telephone=?, email=?, adresse=? WHERE id=?");
+                        $stmt->execute(array($data['nom'], $data['telephone'], $data['email'], $data['adresse'], $data['id']));
+                        echo json_encode(array('success' => true));
+                        } catch(PDOException $e) {
+                            if ($e->getCode() == 23000) {
+                                http_response_code(409);
+                                echo json_encode(array('success' => false, 'error' => 'Ce numéro de téléphone existe déjà'));
+                            } else {
+                                http_response_code(500);
+                                echo json_encode(array('success' => false, 'error' => 'Erreur: ' . $e->getMessage()));
+                            }
+                        }
+                        exit;
                 }
                 elseif ($_SERVER['REQUEST_METHOD'] == 'DELETE') {
                     $stmt = $conn->prepare("DELETE FROM clients WHERE id = ?");
@@ -724,12 +771,42 @@
                     '<div class="form-group"><label>Téléphone</label><input type="tel" id="clientTel" required></div>' +
                     '<div class="form-group"><label>Email</label><input type="email" id="clientEmail"></div>' +
                     '<div class="form-group"><label>Adresse</label><textarea id="clientAdresse" rows="2"></textarea></div>',
-                    function() {
-                        var data = { nom: document.getElementById('clientNom').value, telephone: document.getElementById('clientTel').value, email: document.getElementById('clientEmail').value, adresse: document.getElementById('clientAdresse').value };
-                        fetch('?api=clients', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
-                            .then(function(r) { return r.json(); })
-                            .then(function(result) { if(result.success) { showNotification('Client ajouté'); loadPage('clients'); closeModal(); } });
+                     function() {
+                        var data = { 
+                            nom: document.getElementById('clientNom').value, 
+                            telephone: document.getElementById('clientTel').value, 
+                            email: document.getElementById('clientEmail').value, 
+                            adresse: document.getElementById('clientAdresse').value 
+                        };
+                        
+                        fetch('?api=clients', { 
+                            method: 'POST', 
+                            headers: { 'Content-Type': 'application/json' }, 
+                            body: JSON.stringify(data) 
+                        })
+                        .then(function(response) { 
+                            if (response.status === 409) {
+                                return response.json().then(function(result) {
+                                    showNotification('⚠️ ' + result.error, 'error');
+                                    if (result.client_id) {
+                                        if (confirm('Ce client existe déjà. Voulez-vous voir ses informations ?')) {
+                                            editClient(result.client_id);
+                                        }
+                                    }
+                                    return null;
+                                });
+                            }
+                            return response.json();
+                        })
+                        .then(function(result) { 
+                            if (result && result.success) { 
+                                showNotification('Client ajouté avec succès', 'success'); 
+                                loadPage('clients'); 
+                                closeModal(); 
+                            } 
+                        });
                     });
+
             }
 
             function editClient(id) {
@@ -741,12 +818,38 @@
                         '<div class="form-group"><label>Email</label><input type="email" id="clientEmail" value="' + escapeHtml(c.email || '') + '"></div>' +
                         '<div class="form-group"><label>Adresse</label><textarea id="clientAdresse" rows="2">' + escapeHtml(c.adresse || '') + '</textarea></div>',
                         function() {
-                            var data = { id: parseInt(document.getElementById('clientId').value), nom: document.getElementById('clientNom').value, telephone: document.getElementById('clientTel').value, email: document.getElementById('clientEmail').value, adresse: document.getElementById('clientAdresse').value };
-                            fetch('?api=clients', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
-                                .then(function() { showNotification('Client modifié'); loadPage('clients'); closeModal(); });
+                            var data = { 
+                                id: parseInt(document.getElementById('clientId').value), 
+                                nom: document.getElementById('clientNom').value, 
+                                telephone: document.getElementById('clientTel').value, 
+                                email: document.getElementById('clientEmail').value, 
+                                adresse: document.getElementById('clientAdresse').value 
+                            };
+                            
+                            fetch('?api=clients', { 
+                                method: 'PUT', 
+                                headers: { 'Content-Type': 'application/json' }, 
+                                body: JSON.stringify(data) 
+                            })
+                            .then(function(response) {
+                                if (response.status === 409) {
+                                    return response.json().then(function(result) {
+                                        showNotification('⚠️ ' + result.error, 'error');
+                                        return null;
+                                    });
+                                }
+                                return response.json();
+                            })
+                            .then(function(result) {
+                                if (result && result.success) { 
+                                    showNotification('Client modifié avec succès', 'success'); 
+                                    loadPage('clients'); 
+                                    closeModal(); 
+                                }
+                            });
                         });
                 });
-            }
+            }     
 
             function deleteClient(id) {
                 if (confirm('Supprimer ce client ?')) {
